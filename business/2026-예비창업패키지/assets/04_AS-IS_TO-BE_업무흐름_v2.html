@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>보듬 AS-IS / TO-BE 업무 흐름도</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Noto Sans KR',sans-serif; background:#f5f6fa; }
+
+  /* ===== HEADER ===== */
+  .header {
+    text-align:center;
+    padding:48px 20px 32px;
+  }
+  .header h1 { font-size:32px; font-weight:900; color:#1a1a2e; }
+  .header p { font-size:14px; color:#888; margin-top:8px; }
+
+  /* ===== SECTION WRAPPER ===== */
+  .section {
+    max-width:1100px;
+    margin:0 auto 48px;
+    padding:0 20px;
+  }
+  .section-label {
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 20px;
+    border-radius:24px;
+    font-size:15px;
+    font-weight:800;
+    letter-spacing:1px;
+    color:#fff;
+    margin-bottom:24px;
+  }
+  .section-label.red { background:linear-gradient(135deg,#e74c3c,#c0392b); }
+  .section-label.green { background:linear-gradient(135deg,#27ae60,#219a52); }
+  .section-label small { font-weight:400; font-size:12px; opacity:.85; letter-spacing:0; }
+
+  /* ===== FLOW CANVAS ===== */
+  .flow {
+    background:#fff;
+    border-radius:24px;
+    padding:40px 36px;
+    box-shadow:0 8px 32px rgba(0,0,0,.06);
+    position:relative;
+    overflow:hidden;
+  }
+  .flow.as-is { border-top:5px solid #e74c3c; }
+  .flow.to-be { border-top:5px solid #27ae60; }
+
+  /* ===== SCENE ROW ===== */
+  .scene {
+    display:flex;
+    align-items:flex-start;
+    gap:0;
+    position:relative;
+    margin-bottom:12px;
+  }
+
+  /* Left: location/actor column */
+  .actor-col {
+    width:140px;
+    flex-shrink:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    padding-top:8px;
+  }
+  .actor-avatar {
+    width:72px;
+    height:72px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:36px;
+    margin-bottom:8px;
+    position:relative;
+  }
+  .actor-avatar.caregiver { background:#fff3e0; }
+  .actor-avatar.elder { background:#e8f5e9; }
+  .actor-avatar.center { background:#e3f2fd; }
+  .actor-avatar.guardian { background:#fce4ec; }
+  .actor-avatar.bodeum { background:#e8f5e9; border:2px solid #27ae60; }
+  .actor-avatar.system { background:#f3e5f5; }
+  .actor-name { font-size:13px; font-weight:700; color:#333; }
+  .actor-sub { font-size:10px; color:#999; margin-top:2px; }
+
+  /* Right: action cards */
+  .actions-col {
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    padding:4px 0;
+  }
+
+  .action-card {
+    display:flex;
+    align-items:flex-start;
+    gap:14px;
+    padding:16px 18px;
+    border-radius:16px;
+    border:1px solid #eee;
+    background:#fafbfc;
+    position:relative;
+    transition:transform .15s;
+  }
+  .action-card:hover { transform:translateX(3px); }
+
+  .action-card.pain {
+    background:#fff5f5;
+    border:1px solid #f8d7da;
+    border-left:4px solid #e74c3c;
+  }
+  .action-card.solved {
+    background:#f0faf4;
+    border:1px solid #c3e6cb;
+    border-left:4px solid #27ae60;
+  }
+  .action-card.unchanged {
+    background:#f9f9f9;
+    border:1px solid #e8e8e8;
+    opacity:.6;
+  }
+
+  .action-icon {
+    width:44px;
+    height:44px;
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:22px;
+    flex-shrink:0;
+  }
+  .action-icon.app { background:#e3f2fd; }
+  .action-icon.manual { background:#fce4ec; }
+  .action-icon.kakao { background:#fff9c4; }
+  .action-icon.bodeum-i { background:#e8f5e9; }
+  .action-icon.ai { background:#ede7f6; }
+  .action-icon.web { background:#f3e5f5; }
+  .action-icon.file { background:#fff3e0; }
+  .action-icon.auto { background:#e0f7fa; }
+
+  .action-text { flex:1; }
+  .action-title { font-size:14px; font-weight:600; color:#1a1a2e; line-height:1.5; }
+  .action-desc { font-size:11px; color:#888; line-height:1.6; margin-top:3px; }
+  .action-tag {
+    display:inline-block;
+    font-size:10px;
+    font-weight:600;
+    padding:2px 10px;
+    border-radius:10px;
+    margin-top:5px;
+  }
+  .tag-app { background:#e3f2fd; color:#1565c0; }
+  .tag-manual { background:#fce4ec; color:#c62828; }
+  .tag-kakao { background:#fff9c4; color:#f57f17; }
+  .tag-bodeum { background:#e8f5e9; color:#2e7d32; }
+  .tag-web { background:#f3e5f5; color:#7b1fa2; }
+  .tag-auto { background:#e0f7fa; color:#00838f; }
+  .tag-same { background:#eee; color:#999; }
+
+  .pain-badge {
+    position:absolute;
+    top:8px; right:12px;
+    font-size:10px;
+    font-weight:700;
+    color:#e74c3c;
+    background:#fff0f0;
+    padding:2px 8px;
+    border-radius:8px;
+  }
+
+  /* ===== CONNECTOR ARROW ===== */
+  .connector {
+    display:flex;
+    align-items:center;
+    padding:4px 0 4px 70px;
+  }
+  .connector .line {
+    width:2px;
+    height:28px;
+    background:#ddd;
+    margin-left:0;
+  }
+  .connector.with-arrow {
+    padding-left:70px;
+    flex-direction:column;
+    align-items:flex-start;
+  }
+  .connector .arrow-down {
+    width:0; height:0;
+    border-left:6px solid transparent;
+    border-right:6px solid transparent;
+    border-top:8px solid #ccc;
+    margin-left:-5px;
+  }
+
+  /* ===== LOCATION BAR ===== */
+  .location-bar {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 16px;
+    border-radius:12px;
+    margin-bottom:16px;
+    font-size:13px;
+    font-weight:600;
+  }
+  .location-bar.home { background:#fff8e1; color:#f57f17; border:1px solid #ffe082; }
+  .location-bar.office { background:#e3f2fd; color:#1565c0; border:1px solid #90caf9; }
+  .location-bar.auto-loc { background:#e8f5e9; color:#2e7d32; border:1px solid #a5d6a7; }
+  .location-bar.guardian-loc { background:#fce4ec; color:#c62828; border:1px solid #f8bbd0; }
+
+  /* ===== SUMMARY ===== */
+  .summary-box {
+    margin-top:28px;
+    padding:24px;
+    border-radius:16px;
+    display:flex;
+    gap:20px;
+    flex-wrap:wrap;
+  }
+  .summary-box.red-sum { background:linear-gradient(135deg,#fff5f5,#ffe8e8); border:1px solid #f8d7da; }
+  .summary-box.green-sum { background:linear-gradient(135deg,#f0faf4,#e0f5e9); border:1px solid #c3e6cb; }
+  .sum-item {
+    flex:1;
+    min-width:180px;
+    text-align:center;
+    padding:12px;
+  }
+  .sum-num { font-size:36px; font-weight:900; }
+  .red-sum .sum-num { color:#e74c3c; }
+  .green-sum .sum-num { color:#27ae60; }
+  .sum-label { font-size:12px; color:#666; margin-top:4px; line-height:1.5; }
+
+  /* ===== DIVIDER ===== */
+  .big-arrow-divider {
+    max-width:1100px;
+    margin:0 auto 0;
+    padding:0 20px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:16px;
+    padding-top: 8px;
+    padding-bottom:32px;
+  }
+  .big-arrow-divider .arr {
+    font-size:40px;
+    color:#27ae60;
+    animation:bounce 1.5s infinite;
+  }
+  @keyframes bounce {
+    0%,100% { transform:translateY(0); }
+    50% { transform:translateY(6px); }
+  }
+  .big-arrow-divider .arr-text {
+    font-size:16px;
+    font-weight:700;
+    color:#27ae60;
+    background:#e8f5e9;
+    padding:8px 24px;
+    border-radius:20px;
+  }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    text-align:center;
+    padding:24px 20px 48px;
+    font-size:11px;
+    color:#bbb;
+  }
+
+  /* ===== BOTTOM TABLE ===== */
+  .systems-table {
+    max-width:1100px;
+    margin:0 auto 48px;
+    padding:0 20px;
+  }
+  .sys-card {
+    background:#fff;
+    border-radius:20px;
+    padding:28px 32px;
+    box-shadow:0 4px 16px rgba(0,0,0,.04);
+  }
+  .sys-card h3 {
+    font-size:16px;
+    font-weight:700;
+    margin-bottom:20px;
+    text-align:center;
+    color:#1a1a2e;
+  }
+  .sys-grid {
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+  }
+  .sys-item {
+    padding:16px;
+    border-radius:14px;
+    text-align:center;
+  }
+  .sys-item .si-icon { font-size:28px; margin-bottom:8px; }
+  .sys-item .si-name { font-size:13px; font-weight:700; margin-bottom:4px; }
+  .sys-item .si-desc { font-size:10px; color:#666; line-height:1.5; }
+  .sys-item.si-nhis { background:#e3f2fd; border:1px solid #90caf9; }
+  .sys-item.si-erp { background:#fff3e0; border:1px solid #ffe0b2; }
+  .sys-item.si-hope { background:#f3e5f5; border:1px solid #ce93d8; }
+  .sys-item.si-bodeum { background:#e8f5e9; border:1px solid #a5d6a7; }
+
+  @media(max-width:800px) {
+    .scene { flex-direction:column; }
+    .actor-col { width:100%; flex-direction:row; gap:12px; padding:0 0 8px; }
+    .sys-grid { grid-template-columns:1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<div class="header">
+  <h1>보듬(Bodeum) 업무 흐름 비교</h1>
+  <p>요양보호사 방문부터 기관 서류 보관까지 — 보듬이 바꾸는 것과 바꾸지 않는 것</p>
+</div>
+
+<!-- ===== 시스템 지도 ===== -->
+<div class="systems-table">
+  <div class="sys-card">
+    <h3>요양 현장에서 사용하는 4가지 시스템 (각각 다른 역할)</h3>
+    <div class="sys-grid">
+      <div class="sys-item si-nhis">
+        <div class="si-icon">📱</div>
+        <div class="si-name">스마트장기요양앱</div>
+        <div class="si-desc">건보공단 운영<br>수가 청구용 급여제공기록<br>RFID 출퇴근 태그<br><b>법적 필수</b></div>
+      </div>
+      <div class="sys-item si-erp">
+        <div class="si-icon">🖥️</div>
+        <div class="si-name">민간 ERP</div>
+        <div class="si-desc">이지케어텍, 하이케어 등<br>수급자·일정·청구 관리<br>기관이 자비로 구매<br><b>민간 유료 SaaS</b></div>
+      </div>
+      <div class="sys-item si-hope">
+        <div class="si-icon">🏛️</div>
+        <div class="si-name">희망이음</div>
+        <div class="si-desc">정부(사회보장정보원) 운영<br>직원 인사·회계·전자결재<br>기존 W4C 통합 (2025.1)<br><b>공공 무상 ERP</b></div>
+      </div>
+      <div class="sys-item si-bodeum">
+        <div class="si-icon">🎙️</div>
+        <div class="si-name">보듬</div>
+        <div class="si-desc">음성→AI 상태변화기록지<br>+ 보호자 카카오 알림톡<br>위 3가지와 별개 영역<br><b>신규 Add-on SaaS</b></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ==================== AS-IS ==================== -->
+<div class="section">
+  <div class="section-label red">AS-IS <small>— 현행 (보듬 없음)</small></div>
+
+  <div class="flow as-is">
+
+    <!-- SCENE 1: 어르신 댁 -->
+    <div class="location-bar home">🏠 어르신 댁 (방문 현장)</div>
+
+    <div class="scene">
+      <div class="actor-col">
+        <div class="actor-avatar caregiver">👩‍⚕️</div>
+        <div class="actor-name">요양보호사</div>
+        <div class="actor-sub">60세 이상 66.1%</div>
+      </div>
+      <div class="actions-col">
+        <div class="action-card">
+          <div class="action-icon" style="background:#fff3e0;">🤝</div>
+          <div class="action-text">
+            <div class="action-title">어르신 댁 방문 · 돌봄 서비스 제공</div>
+            <div class="action-desc">신체활동 지원, 가사 지원, 인지자극 활동 (약 2~4시간)</div>
+          </div>
+        </div>
+
+        <div class="action-card">
+          <div class="action-icon app">📱</div>
+          <div class="action-text">
+            <div class="action-title">공단 앱으로 RFID 태그 + 급여제공기록 입력</div>
+            <div class="action-desc">전자태그 시작/종료 → 14종 서식 체크리스트 입력 → 수급자 전자서명</div>
+            <span class="action-tag tag-app">📱 스마트장기요양앱 (법적 필수)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector"><div class="line"></div></div>
+
+    <!-- SCENE 2: 퇴근 후 (이동 중/집) -->
+    <div class="location-bar home">🚶‍♀️ 퇴근 후 (이동 중 / 집)</div>
+
+    <div class="scene">
+      <div class="actor-col">
+        <div class="actor-avatar caregiver">😩</div>
+        <div class="actor-name">요양보호사</div>
+        <div class="actor-sub">퇴근 후에도 업무</div>
+      </div>
+      <div class="actions-col">
+        <div class="action-card pain">
+          <span class="pain-badge">Pain Point</span>
+          <div class="action-icon kakao">💬</div>
+          <div class="action-text">
+            <div class="action-title">개인 카카오톡으로 보호자 감성 소통</div>
+            <div class="action-desc">"오늘 어머니 식사 잘 하셨어요~" 수동 타이핑. 답장 오면 또 응대. 24시간 감정노동</div>
+            <span class="action-tag tag-kakao">💬 개인 카톡 (양방향 감정노동)</span>
+          </div>
+        </div>
+
+        <div class="action-card pain">
+          <span class="pain-badge">Pain Point</span>
+          <div class="action-icon manual">✍️</div>
+          <div class="action-text">
+            <div class="action-title">상태변화기록지 수기 작성 (주 1회)</div>
+            <div class="action-desc">수급자의 신체·인지·정서 상태를 서술형으로 작성. 종이에 수기 또는 타이핑. 전산 시스템 없음</div>
+            <span class="action-tag tag-manual">✍️ 수기 종이 작성 (전산 시스템 없음)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector"><div class="line"></div></div>
+
+    <!-- SCENE 3: 센터 -->
+    <div class="location-bar office">🏢 센터 사무실</div>
+
+    <div class="scene">
+      <div class="actor-col">
+        <div class="actor-avatar center">👨‍💼</div>
+        <div class="actor-name">원장 · 사회복지사</div>
+        <div class="actor-sub">센터 관리자</div>
+      </div>
+      <div class="actions-col">
+        <div class="action-card">
+          <div class="action-icon web">🖥️</div>
+          <div class="action-text">
+            <div class="action-title">공단 웹에서 RFID 전송현황 확인</div>
+            <div class="action-desc">장기요양기관 업무지원시스템(공단 웹)에서 전일 전송 확인, 미전송·오류건 보완</div>
+            <span class="action-tag tag-web">🖥️ 공단 웹 시스템</span>
+          </div>
+        </div>
+
+        <div class="action-card pain">
+          <span class="pain-badge">Pain Point</span>
+          <div class="action-icon manual">📋</div>
+          <div class="action-text">
+            <div class="action-title">상태변화기록지 수기 취합 · 검토</div>
+            <div class="action-desc">요양보호사 종이 기록을 수급자별로 수집. 미작성분 독촉. 품질 편차 심각</div>
+            <span class="action-tag tag-manual">📋 수기 수집 · 독촉</span>
+          </div>
+        </div>
+
+        <div class="action-card">
+          <div class="action-icon web">💰</div>
+          <div class="action-text">
+            <div class="action-title">월 단위 급여비용 공단 청구</div>
+            <div class="action-desc">급여제공기록 기반 수가 청구 (매월)</div>
+            <span class="action-tag tag-web">🖥️ 공단 웹 시스템</span>
+          </div>
+        </div>
+
+        <div class="action-card pain">
+          <span class="pain-badge">Pain Point</span>
+          <div class="action-icon file">📁</div>
+          <div class="action-text">
+            <div class="action-title">상태변화기록지 종이 보관 (평가 실사 대비)</div>
+            <div class="action-desc">수급자 파일에 종이 보관. 3년 주기 공단 현장 실사 시 제시. 분실·훼손 리스크</div>
+            <span class="action-tag tag-manual">📁 종이 파일 (분실 위험)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector"><div class="line"></div></div>
+
+    <!-- SCENE 4: 보호자 -->
+    <div class="location-bar guardian-loc">👨‍👩‍👧 보호자 (자녀 등)</div>
+
+    <div class="scene">
+      <div class="actor-col">
+        <div class="actor-avatar guardian">👩</div>
+        <div class="actor-name">보호자</div>
+        <div class="actor-sub">자녀 · 가족</div>
+      </div>
+      <div class="actions-col">
+        <div class="action-card pain">
+          <span class="pain-badge">Pain Point</span>
+          <div class="action-icon kakao">📱</div>
+          <div class="action-text">
+            <div class="action-title">개인 카톡으로 안부 확인 (불규칙)</div>
+            <div class="action-desc">요양보호사가 보내야 옴. 일관성 없음. 못 받는 날도 많음. 답장 시 추가 감정노동</div>
+            <span class="action-tag tag-kakao">💬 개인 카톡 (비정기)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AS-IS Summary -->
+    <div class="summary-box red-sum">
+      <div class="sum-item">
+        <div class="sum-num">3중</div>
+        <div class="sum-label">행정 채널<br>(공단앱 + 카톡 + 수기)</div>
+      </div>
+      <div class="sum-item">
+        <div class="sum-num">0개</div>
+        <div class="sum-label">상태변화기록지<br>전산 시스템</div>
+      </div>
+      <div class="sum-item">
+        <div class="sum-num">24h</div>
+        <div class="sum-label">보호자 카톡<br>감정노동</div>
+      </div>
+      <div class="sum-item">
+        <div class="sum-num">종이</div>
+        <div class="sum-label">기록 보관<br>(분실·훼손 리스크)</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== 전환 화살표 ===== -->
+<div class="big-arrow-divider">
+  <span class="arr">⬇</span>
+  <span class="arr-text">보듬 도입 시</span>
+  <span class="arr">⬇</span>
+</div>
+
+<!-- ==================== TO-BE ==================== -->
+<div class="section">
+  <div class="section-label green">TO-BE <small>— 개선 (보듬 도입)</small></div>
+
+  <div class="flow to-be">
+
+    <!-- SCENE 1: 어르신 댁 -->
+    <div class="location-bar home">🏠 어르신 댁 (방문 현장)</div>
+
+    <div class="scene">
+      <div class="actor-col">
+        <div class="actor-avatar caregiver">👩‍⚕️</div>
+        <div class="actor-name">요양보호사</div>
+        <div class="actor-sub">60세 이상 66.1%</div>
+      </div>
+      <div class="actions-col">
+        <div class="action-card unchanged">
+          <div class="action-icon" style="background:#fff3e0;">🤝</div>
+          <div class="action-text">
+            <div class="action-title">어르신 댁 방문 · 돌봄 서비스 제공</div>
+            <div class="action-desc">신체활동 지원, 가사 지원, 인지자극 활동 (변동 없음)</div>
+          </div>
+        </div>
+
+        <div class="action-card unchanged">
+          <div class="action-icon app">📱</div>
+          <div class="action-text">
+            <div class="action-title">공단 앱으로 RFID 태그 + 급여제공기록 입력</div>
+            <div class="action-desc">법적 필수. 보듬은 이 영역을 대체하지 않음 (변동 없음)</div>
+            <span class="action-tag tag-same">📱 스마트장기요양앱 (그대로 사용)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector"><div class="line"></div></div>
+
+    <!-- SCENE 2: 방문 종료 직후 (현장에서 바로) -->
+    <div class="location-bar auto-loc">🎙️ 방문 종료 직후 (현장에서 바로, 1~2분)</div>
+
+    <div class="scene">
+      <div class="actor-col">
+        <div class="actor-avatar bodeum">🎙️</div>
+        <div class="actor-name">보듬 앱</div>
+        <div class="actor-sub">Zero-Typing</div>
+      </div>
+      <div class="actions-col">
+        <div class="action-card solved">
+          <div class="action-icon bodeum-i">🗣️</div>
+          <div class="action-text">
+            <div class="action-title">보듬 앱에서 1~2분 음성 녹음</div>
+            <div class="action-desc">"오늘 어머니 식사 잘 하셨고 기분이 밝으셨어요. 혈압은 130/85로 안정적이에요"<br>→ 말로만 하면 끝. 타이핑 0회. 사투리·외국어 OK</div>
+            <span class="action-tag tag-bodeum">🎙️ 보듬 앱 (음성 녹음)</span>
+          </div>
+        </div>
+
+        <div class="action-card solved">
+          <div class="action-icon ai">🤖</div>
+          <div class="action-text">
+            <div class="action-title">AI가 자동 변환 (수 초)</div>
+            <div class="action-desc">Whisper STT → GPT-4o-mini →<br>① 공단 평가 기준 서술형 상태변화기록지 초안<br>② 보호자용 감성 알림톡 메시지<br>동시 자동 생성</div>
+            <span class="action-tag tag-auto">🤖 AI 자동 변환 (Whisper + GPT)</span>
+          </div>
+        </div>
+
+        <div class="action-card solved">
+          <div class="action-icon bodeum-i">👆</div>
+          <div class="action-text">
+            <div class="action-title">초안 확인 → [제출] 버튼 터치</div>
+            <div class="action-desc">크게 틀리지 않는지 간단히 확인. 수정·타이핑 불필요. 수초 만에 완료</div>
+            <span class="action-tag tag-bodeum">📱 보듬 앱 (버튼 터치 1회)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector"><div class="line"></div></div>
+
+    <!-- 자동 발송 -->
+    <div class="location-bar auto-loc">⚡ 자동 처리 (보듬 서버)</div>
+
+    <div class="scene">
+      <div class="actor-col">
+        <div class="actor-avatar system">⚡</div>
+        <div class="actor-name">보듬 시스템</div>
+        <div class="actor-sub">자동 처리</div>
+      </div>
+      <div class="actions-col">
+        <div class="action-card solved">
+          <div class="action-icon auto">📨</div>
+          <div class="action-text">
+            <div class="action-title">보호자에게 카카오 알림톡 자동 발송</div>
+            <div class="action-desc">"오늘 어머니 식사 잘 하셨고 기분이 밝으셨습니다" — 감성 돌봄 리포트<br>단방향. 앱 설치 불필요. 채널추가형 열람률 90%+</div>
+            <span class="action-tag tag-auto">📨 카카오 알림톡 자동 발송 (단방향)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector"><div class="line"></div></div>
+
+    <!-- SCENE 3: 센터 -->
+    <div class="location-bar office">🏢 센터 사무실</div>
+
+    <div class="scene">
+      <div class="actor-col">
+        <div class="actor-avatar center">👨‍💼</div>
+        <div class="actor-name">원장 · 사회복지사</div>
+        <div class="actor-sub">센터 관리자</div>
+      </div>
+      <div class="actions-col">
+        <div class="action-card unchanged">
+          <div class="action-icon web">🖥️</div>
+          <div class="action-text">
+            <div class="action-title">공단 웹에서 RFID 전송현황 확인</div>
+            <div class="action-desc">기존과 동일. 보듬은 이 영역을 건드리지 않음 (변동 없음)</div>
+            <span class="action-tag tag-same">🖥️ 공단 웹 시스템 (그대로)</span>
+          </div>
+        </div>
+
+        <div class="action-card solved">
+          <div class="action-icon bodeum-i">✅</div>
+          <div class="action-text">
+            <div class="action-title">보듬 백오피스에서 AI 초안 검토 · 확정</div>
+            <div class="action-desc">요양보호사별 AI 기록이 한 화면에 자동 취합. 클릭으로 검토·수정·확정.<br>기존 수기 취합·독촉 업무 → 디지털 원클릭으로 대체</div>
+            <span class="action-tag tag-bodeum">🖥️ 보듬 웹 백오피스</span>
+          </div>
+        </div>
+
+        <div class="action-card unchanged">
+          <div class="action-icon web">💰</div>
+          <div class="action-text">
+            <div class="action-title">월 단위 급여비용 공단 청구</div>
+            <div class="action-desc">기존과 동일 (변동 없음)</div>
+            <span class="action-tag tag-same">🖥️ 공단 웹 시스템 (그대로)</span>
+          </div>
+        </div>
+
+        <div class="action-card solved">
+          <div class="action-icon bodeum-i">💾</div>
+          <div class="action-text">
+            <div class="action-title">상태변화기록지 디지털 자동 누적 · 보관</div>
+            <div class="action-desc">확정된 기록이 자동 누적. PDF/엑셀 즉시 출력 가능. 분실·훼손 0.<br>3년 주기 공단 평가 실사에 즉시 대응</div>
+            <span class="action-tag tag-bodeum">💾 보듬 디지털 보관</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector"><div class="line"></div></div>
+
+    <!-- SCENE 4: 보호자 -->
+    <div class="location-bar guardian-loc">👨‍👩‍👧 보호자 (자녀 등)</div>
+
+    <div class="scene">
+      <div class="actor-col">
+        <div class="actor-avatar guardian">😊</div>
+        <div class="actor-name">보호자</div>
+        <div class="actor-sub">자녀 · 가족</div>
+      </div>
+      <div class="actions-col">
+        <div class="action-card solved">
+          <div class="action-icon auto">📨</div>
+          <div class="action-text">
+            <div class="action-title">카카오 알림톡으로 돌봄 리포트 자동 수신</div>
+            <div class="action-desc">앱 설치 불필요. 매 방문마다 자동 수신. 일관된 품질의 감성 돌봄 안부</div>
+            <span class="action-tag tag-auto">📨 카카오 알림톡 (무설치 · 자동)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TO-BE Summary -->
+    <div class="summary-box green-sum">
+      <div class="sum-item">
+        <div class="sum-num">2중</div>
+        <div class="sum-label">행정 채널<br>(공단앱 + 보듬 음성 1분)</div>
+      </div>
+      <div class="sum-item">
+        <div class="sum-num">AI</div>
+        <div class="sum-label">상태변화기록지<br>자동 생성 (타이핑 0)</div>
+      </div>
+      <div class="sum-item">
+        <div class="sum-num">0h</div>
+        <div class="sum-label">감정노동 차단<br>(단방향 자동 알림)</div>
+      </div>
+      <div class="sum-item">
+        <div class="sum-num">디지털</div>
+        <div class="sum-label">기록 보관<br>(분실 0 · 즉시 출력)</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="footer">
+  보듬(Bodeum) — AI 기반 요양 현장 Zero-Typing 행정 자동화 B2B SaaS &nbsp;|&nbsp; 2026년 예비창업패키지 사업계획서 참고 자료
+</div>
+
+</body>
+</html>

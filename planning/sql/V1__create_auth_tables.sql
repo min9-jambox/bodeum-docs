@@ -7,6 +7,28 @@
 -- ============================================================
 
 -- ------------------------------------------------------------
+-- UUID v7 생성 함수 (RFC 9562, 2024-05)
+-- 상위 48비트 = Unix 타임스탬프(ms) → B-tree 순차 삽입 보장
+-- PostgreSQL 17 네이티브 미지원 시 아래 함수 사용
+-- ------------------------------------------------------------
+CREATE OR REPLACE FUNCTION uuid_generate_v7() RETURNS uuid AS $$
+DECLARE
+    unix_ts_ms bytea;
+    uuid_bytes bytea;
+BEGIN
+    unix_ts_ms = substring(int8send(floor(extract(epoch FROM clock_timestamp()) * 1000)::bigint) FROM 3);
+    uuid_bytes = unix_ts_ms || gen_random_bytes(10);
+    -- version 7
+    uuid_bytes = set_byte(uuid_bytes, 6, (get_byte(uuid_bytes, 6) & 15) | 112);
+    -- variant 2
+    uuid_bytes = set_byte(uuid_bytes, 8, (get_byte(uuid_bytes, 8) & 63) | 128);
+    RETURN encode(uuid_bytes, 'hex')::uuid;
+END
+$$ LANGUAGE plpgsql VOLATILE;
+
+COMMENT ON FUNCTION uuid_generate_v7() IS 'UUID v7: 시간순 정렬 보장, B-tree 인덱스 최적화';
+
+-- ------------------------------------------------------------
 -- ENUM Types
 -- ------------------------------------------------------------
 CREATE TYPE user_status AS ENUM ('ACTIVE', 'INVITED', 'INACTIVE');
@@ -23,7 +45,7 @@ CREATE TYPE otp_status AS ENUM ('PENDING', 'VERIFIED', 'EXPIRED', 'FAILED');
 -- 전체 역할 공통의 인증 주체. 역할·센터 소속은 UserCenterRole로 분리.
 -- ------------------------------------------------------------
 CREATE TABLE "user" (
-    id                UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+    id                UUID            PRIMARY KEY DEFAULT uuid_generate_v7(),
     phone             VARCHAR(20)     NOT NULL,
     name              VARCHAR(100)    NOT NULL,
     preferred_locale  VARCHAR(10)     NOT NULL DEFAULT 'ko',
@@ -48,7 +70,7 @@ COMMENT ON COLUMN "user".preferred_locale IS '앱 UI 언어: ko, en, vi, zh-CN';
 -- User와 Center의 N:M 매핑 + 역할. ADMIN은 center_id NULL.
 -- ------------------------------------------------------------
 CREATE TABLE user_center_role (
-    id                UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+    id                UUID            PRIMARY KEY DEFAULT uuid_generate_v7(),
     user_id           UUID            NOT NULL REFERENCES "user" (id),
     center_id         UUID,           -- FK → center.id (V2에서 생성), ADMIN은 NULL
     role              role_type       NOT NULL,
@@ -71,7 +93,7 @@ COMMENT ON TABLE user_center_role IS '사용자-센터 역할 매핑 (N:M + role
 -- SMS OTP로 검증 완료 후 등록된 모바일 디바이스.
 -- ------------------------------------------------------------
 CREATE TABLE trusted_device (
-    id                  UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+    id                  UUID            PRIMARY KEY DEFAULT uuid_generate_v7(),
     user_id             UUID            NOT NULL REFERENCES "user" (id),
     device_id           VARCHAR(255)    NOT NULL,
     device_name         VARCHAR(100)    NOT NULL,
@@ -98,7 +120,7 @@ COMMENT ON COLUMN trusted_device.expires_at IS '만료 일시 (등록 후 90일)
 -- 웹 로그인 시 생성되는 앱 푸시 승인 요청. 60초 TTL.
 -- ------------------------------------------------------------
 CREATE TABLE web_auth_request (
-    id                  UUID              PRIMARY KEY DEFAULT gen_random_uuid(),
+    id                  UUID              PRIMARY KEY DEFAULT uuid_generate_v7(),
     user_id             UUID              NOT NULL REFERENCES "user" (id),
     status              web_auth_status   NOT NULL DEFAULT 'PENDING',
     client_ip           VARCHAR(45)       NOT NULL,
@@ -121,7 +143,7 @@ COMMENT ON TABLE web_auth_request IS '웹 인증 요청 - 60초 TTL, 동시 PEND
 -- SMS OTP 발송 및 검증 이력.
 -- ------------------------------------------------------------
 CREATE TABLE otp_verification (
-    id              UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
+    id              UUID          PRIMARY KEY DEFAULT uuid_generate_v7(),
     phone           VARCHAR(20)   NOT NULL,
     code            VARCHAR(6)    NOT NULL,
     purpose         otp_purpose   NOT NULL,
@@ -143,7 +165,7 @@ COMMENT ON COLUMN otp_verification.code IS 'OTP 코드 (해시 저장)';
 -- 웹 로그인 완료 후 14일간 간편 재인증 허용.
 -- ------------------------------------------------------------
 CREATE TABLE browser_trust (
-    id                    UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
+    id                    UUID          PRIMARY KEY DEFAULT uuid_generate_v7(),
     user_id               UUID          NOT NULL REFERENCES "user" (id),
     browser_fingerprint   VARCHAR(500)  NOT NULL,
     user_agent            TEXT          NOT NULL,

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AS-IS → TO-BE 업무흐름 (서류평가용)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    background: #fff;
+    padding: 0;
+  }
+  .container {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 20px 16px;
+  }
+
+  /* 상단 타이틀 */
+  .title-row {
+    text-align: center;
+    margin-bottom: 14px;
+  }
+  .title-row h2 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a1a2e;
+    letter-spacing: -0.3px;
+  }
+  .title-row .sub {
+    font-size: 11px;
+    color: #888;
+    margin-top: 2px;
+  }
+
+  /* 메인 비교 영역 */
+  .compare {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  /* AS-IS / TO-BE 박스 */
+  .panel {
+    flex: 1;
+    border-radius: 10px;
+    padding: 14px 14px 12px;
+    position: relative;
+  }
+  .panel.as-is {
+    background: #FFF5F5;
+    border: 1.5px solid #FEB2B2;
+  }
+  .panel.to-be {
+    background: #F0FFF4;
+    border: 1.5px solid #9AE6B4;
+  }
+
+  .panel-label {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+  }
+  .as-is .panel-label {
+    background: #FED7D7;
+    color: #C53030;
+  }
+  .to-be .panel-label {
+    background: #C6F6D5;
+    color: #276749;
+  }
+
+  /* 업무 항목 리스트 */
+  .task-list {
+    list-style: none;
+  }
+  .task-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: #2D3748;
+  }
+  .task-list li:last-child {
+    margin-bottom: 0;
+  }
+  .task-list .icon {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    margin-top: 1px;
+  }
+  .as-is .icon {
+    background: #FED7D7;
+  }
+  .to-be .icon {
+    background: #C6F6D5;
+  }
+
+  .task-list .label {
+    font-weight: 600;
+    display: block;
+  }
+  .task-list .desc {
+    color: #718096;
+    font-size: 11px;
+  }
+
+  /* Pain / Solved 뱃지 */
+  .badge {
+    display: inline-block;
+    font-size: 9.5px;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+  .badge.pain {
+    background: #FED7D7;
+    color: #C53030;
+  }
+  .badge.solved {
+    background: #C6F6D5;
+    color: #276749;
+  }
+  .badge.same {
+    background: #EDF2F7;
+    color: #718096;
+  }
+
+  /* 화살표 */
+  .arrow-col {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 36px;
+  }
+  .arrow-col .arrow {
+    font-size: 24px;
+    color: #4299E1;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  /* 하단 요약 바 */
+  .summary-bar {
+    margin-top: 12px;
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    padding: 8px 0;
+    border-top: 1px solid #E2E8F0;
+  }
+  .summary-item {
+    text-align: center;
+  }
+  .summary-item .num {
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+  .summary-item .num.red { color: #E53E3E; }
+  .summary-item .num.green { color: #38A169; }
+  .summary-item .txt {
+    font-size: 10px;
+    color: #718096;
+    margin-top: 1px;
+  }
+
+  .strike { text-decoration: line-through; color: #A0AEC0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="title-row">
+    <h2>재가요양 현장 업무흐름 — AS-IS vs TO-BE</h2>
+    <div class="sub">방문요양 1회 서비스 기준 · 요양보호사 + 센터장 관점</div>
+  </div>
+
+  <div class="compare">
+    <!-- AS-IS -->
+    <div class="panel as-is">
+      <span class="panel-label">AS-IS 현재</span>
+      <ul class="task-list">
+        <li>
+          <span class="icon">📱</span>
+          <div>
+            <span class="label">① 공단 앱 입력</span>
+            <span class="desc">RFID 태그 + 급여제공기록 14종 체크 <span class="badge same">유지</span></span>
+          </div>
+        </li>
+        <li>
+          <span class="icon">✍️</span>
+          <div>
+            <span class="label">② 상태변화기록지 수기 작성</span>
+            <span class="desc">서술형 · 주1회 · 종이/엑셀 <span class="badge pain">30분+</span></span>
+          </div>
+        </li>
+        <li>
+          <span class="icon">💬</span>
+          <div>
+            <span class="label">③ 보호자 카톡 수동 발송</span>
+            <span class="desc">개인 카톡 · 퇴근 후 감정노동 <span class="badge pain">부담</span></span>
+          </div>
+        </li>
+        <li>
+          <span class="icon">📂</span>
+          <div>
+            <span class="label">④ 센터장 — 종이 취합·보관</span>
+            <span class="desc">월말 회수 · 수급자별 파일링 <span class="badge pain">수작업</span></span>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- 화살표 -->
+    <div class="arrow-col">
+      <span class="arrow">→</span>
+    </div>
+
+    <!-- TO-BE -->
+    <div class="panel to-be">
+      <span class="panel-label">TO-BE 보듬 도입 후</span>
+      <ul class="task-list">
+        <li>
+          <span class="icon">📱</span>
+          <div>
+            <span class="label">① 공단 앱 입력</span>
+            <span class="desc">RFID + 급여제공기록 (변경 없음) <span class="badge same">유지</span></span>
+          </div>
+        </li>
+        <li>
+          <span class="icon">🎙️</span>
+          <div>
+            <span class="label">② 보듬 음성 녹음 1분</span>
+            <span class="desc">AI가 서술형 기록 자동 생성 <span class="badge solved">자동화</span></span>
+          </div>
+        </li>
+        <li>
+          <span class="icon">🔔</span>
+          <div>
+            <span class="label">③ 알림톡 자동 발송</span>
+            <span class="desc">보호자에게 즉시 전송 <span class="badge solved">자동화</span></span>
+          </div>
+        </li>
+        <li>
+          <span class="icon">📊</span>
+          <div>
+            <span class="label">④ 센터장 — 대시보드 관리</span>
+            <span class="desc">실시간 기록 현황 · 자동 보관 <span class="badge solved">자동화</span></span>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 하단 요약 -->
+  <div class="summary-bar">
+    <div class="summary-item">
+      <div class="num red"><span class="strike">3중</span></div>
+      <div class="txt">행정 부담 (AS-IS)</div>
+    </div>
+    <div class="summary-item">
+      <div class="num" style="color:#4299E1;">→</div>
+      <div class="txt">&nbsp;</div>
+    </div>
+    <div class="summary-item">
+      <div class="num green">1중</div>
+      <div class="txt">공단 앱만 유지</div>
+    </div>
+    <div class="summary-item">
+      <div class="num green" style="font-size:16px;">+30분</div>
+      <div class="txt">주당 절감</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,5 +1,5 @@
 -- ============================================================
--- V3: Notification Service Tables
+-- V1: Notification Service Tables
 -- 보듬(Bodeum) - AI 돌봄 기록 SaaS
 -- Entities: NotificationTemplate
 -- DB: PostgreSQL 17 | Encoding: UTF-8 | Timezone: UTC (TIMESTAMPTZ)
@@ -12,7 +12,7 @@
 -- 1단계: ko 단일 언어 시드. 2단계: en/vi 번역 추가.
 -- ------------------------------------------------------------
 CREATE TABLE notification_template (
-    id              UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
+    id              UUID          PRIMARY KEY DEFAULT uuid_generate_v7(),
     template_key    VARCHAR(50)   NOT NULL,
     content         JSONB         NOT NULL,
     created_at      TIMESTAMPTZ   NOT NULL DEFAULT now(),

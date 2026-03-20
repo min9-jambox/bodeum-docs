@@ -15,8 +15,10 @@
 
 - Content-Type: `application/json` (파일 업로드 시 `multipart/form-data`)
 - 문자 인코딩: UTF-8
-- 날짜: ISO 8601 (서버 저장: UTC, 응답: UTC offset 포함 — `2026-03-18T05:30:00Z` 또는 `2026-03-18T14:30:00+09:00`)
+- 날짜/시간: ISO 8601 UTC (`Z` suffix). 서버는 항상 UTC로 저장·응답하며, 타임존 변환은 클라이언트에서 수행한다. (예: `2026-03-18T05:30:00Z`)
 - 페이징: `?page=0&size=20&sort=createdAt,desc`
+
+> **타임존 처리 원칙**: DB(`TIMESTAMPTZ`)와 서버(JVM `UTC`)는 전 구간 UTC를 유지한다. API 응답의 모든 시간 필드는 ISO 8601 UTC(`Z` suffix)로 반환하며, 클라이언트(React/React Native)에서 사용자 타임존으로 변환하여 표시한다. 1단계에서는 `Asia/Seoul` 기본, 2단계 글로벌 확장 시 `User.preferred_timezone` 필드를 추가하여 사용자별 타임존 설정을 지원한다.
 
 ### 1.2 공통 응답 구조
 
@@ -25,7 +27,7 @@
   "success": true,
   "data": { ... },
   "error": null,
-  "timestamp": "2026-03-18T14:30:00+09:00"
+  "timestamp": "2026-03-18T05:30:00Z"
 }
 ```
 
@@ -41,7 +43,7 @@
     "messageKey": "error.auth.failed",
     "details": null
   },
-  "timestamp": "2026-03-18T14:30:00+09:00"
+  "timestamp": "2026-03-18T05:30:00Z"
 }
 ```
 
@@ -251,7 +253,7 @@ OTP 검증 완료 후 현재 기기를 신뢰 기기로 등록.
   "success": true,
   "data": {
     "trustedDeviceId": "uuid",
-    "expiresAt": "2026-06-16T14:30:00+09:00"
+    "expiresAt": "2026-06-16T05:30:00Z"
   }
 }
 ```
@@ -278,8 +280,8 @@ OTP 검증 완료 후 현재 기기를 신뢰 기기로 등록.
       "deviceName": "iPhone 14",
       "platform": "IOS",
       "authMethod": "BIOMETRIC",
-      "lastUsedAt": "2026-03-18T10:00:00+09:00",
-      "expiresAt": "2026-06-16T14:30:00+09:00",
+      "lastUsedAt": "2026-03-18T01:00:00Z",
+      "expiresAt": "2026-06-16T05:30:00Z",
       "isCurrent": true
     }
   ]
@@ -398,7 +400,7 @@ OTP 검증 완료 후 현재 기기를 신뢰 기기로 등록.
   "success": true,
   "data": {
     "trusted": true,
-    "expiresAt": "2026-04-01T14:30:00+09:00"
+    "expiresAt": "2026-04-01T05:30:00Z"
   }
 }
 ```
@@ -671,7 +673,7 @@ AI 처리 상태 폴링.
     "submittedAt": null,
     "confirmedAt": null,
     "confirmedBy": null,
-    "createdAt": "2026-03-18T14:30:00+09:00"
+    "createdAt": "2026-03-18T05:30:00Z"
   }
 }
 ```
@@ -746,7 +748,7 @@ AI 초안 텍스트 직접 수정 (보정 방식 3: 텍스트 편집).
   "data": {
     "recordId": "uuid",
     "status": "SUBMITTED",
-    "submittedAt": "2026-03-18T15:00:00+09:00"
+    "submittedAt": "2026-03-18T06:00:00Z"
   }
 }
 ```
@@ -793,7 +795,7 @@ AI 초안 텍스트 직접 수정 (보정 방식 3: 텍스트 편집).
         "client": { "id": "uuid", "name": "박할머니" },
         "caregiver": { "id": "uuid", "name": "김순자" },
         "visitDate": "2026-03-18",
-        "submittedAt": "2026-03-18T15:00:00+09:00",
+        "submittedAt": "2026-03-18T06:00:00Z",
         "status": "SUBMITTED"
       }
     ],
@@ -840,7 +842,7 @@ AI 초안 텍스트 직접 수정 (보정 방식 3: 텍스트 편집).
   "data": {
     "recordId": "uuid",
     "status": "CONFIRMED",
-    "confirmedAt": "2026-03-18T16:00:00+09:00",
+    "confirmedAt": "2026-03-18T07:00:00Z",
     "confirmedBy": "uuid"
   }
 }

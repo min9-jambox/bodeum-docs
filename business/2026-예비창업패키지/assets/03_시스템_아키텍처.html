@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>보듬 시스템 아키텍처</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    background: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .container { width: 880px; }
+  .title {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 800;
+    color: #1a1a2e;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 28px;
+  }
+
+  .arch {
+    position: relative;
+  }
+
+  /* Client Layer */
+  .layer {
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .layer-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+
+  .client-layer {
+    background: #f0f4ff;
+    border: 1.5px solid #d0dcf0;
+  }
+  .clients {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+  }
+  .client-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .client-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+  .client-text { font-size: 12px; font-weight: 700; color: #1a1a2e; }
+  .client-sub { font-size: 9px; color: #999; font-weight: 400; }
+
+  /* Arrow connectors */
+  .connector {
+    display: flex;
+    justify-content: center;
+    margin: 4px 0;
+  }
+  .connector svg { width: 20px; height: 24px; }
+  .connector-label {
+    font-size: 8.5px;
+    color: #bbb;
+    text-align: center;
+    margin-top: -2px;
+    margin-bottom: 2px;
+  }
+
+  /* Gateway */
+  .gateway-layer {
+    background: #f5f0ff;
+    border: 1.5px solid #d8cef0;
+  }
+  .gateway-box {
+    background: linear-gradient(135deg, #7B68EE, #6A5ACD);
+    border-radius: 10px;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #fff;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+  .gateway-box .icon { font-size: 18px; }
+  .gateway-box .text { font-size: 12px; font-weight: 700; }
+  .gateway-box .desc { font-size: 9px; opacity: 0.8; }
+
+  /* Services Layer */
+  .services-layer {
+    background: #f8faf8;
+    border: 1.5px solid #d0e8d0;
+  }
+  .services {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+  }
+  .service-card {
+    width: 180px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    border-top: 3px solid;
+  }
+  .service-card.auth { border-color: #4A90D9; }
+  .service-card.care { border-color: #2ECC71; }
+  .service-card.ai { border-color: #FF8C42; }
+  .service-card.noti { border-color: #F1C40F; }
+  .service-name {
+    font-size: 12px;
+    font-weight: 800;
+    color: #1a1a2e;
+    margin-bottom: 2px;
+  }
+  .service-tech {
+    font-size: 8.5px;
+    color: #bbb;
+    margin-bottom: 8px;
+  }
+  .service-features {
+    list-style: none;
+  }
+  .service-features li {
+    font-size: 9.5px;
+    color: #666;
+    padding: 2px 0;
+    padding-left: 12px;
+    position: relative;
+  }
+  .service-features li::before {
+    content: '•';
+    position: absolute;
+    left: 2px;
+    color: #ccc;
+  }
+
+  /* Data Layer */
+  .data-layer {
+    background: #fdf8f0;
+    border: 1.5px solid #f0e0c8;
+  }
+  .data-boxes {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+  }
+  .data-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .data-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    background: #fff3e0;
+  }
+  .data-text { font-size: 11px; font-weight: 700; color: #1a1a2e; }
+  .data-sub { font-size: 9px; color: #999; font-weight: 400; }
+
+  /* External APIs */
+  .ext-layer {
+    background: #fff5f5;
+    border: 1.5px solid #f0d0d0;
+  }
+  .ext-apis {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .ext-api {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border-radius: 8px;
+    padding: 6px 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .ext-api-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+  }
+  .ext-api-name { font-size: 10px; font-weight: 700; color: #444; }
+  .ext-api-desc { font-size: 8px; color: #aaa; }
+
+  .bg-blue-light { background: #eef2ff; }
+  .bg-green-light { background: #e8f8ef; }
+  .bg-orange-light { background: #fff3e0; }
+  .bg-yellow-light { background: #fef9e7; }
+  .bg-purple-light { background: #f3e8ff; }
+  .bg-red-light { background: #fde8e8; }
+
+  .tech-badge {
+    display: inline-block;
+    font-size: 8px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #f0f0f5;
+    color: #888;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="title">보듬 시스템 아키텍처</div>
+  <div class="subtitle">Kotlin MSA + React + React Native | 4개 마이크로서비스 + AI 외부 API 연동</div>
+
+  <div class="arch">
+    <!-- Client Layer -->
+    <div class="layer client-layer">
+      <div class="layer-label">Client Layer</div>
+      <div class="clients">
+        <div class="client-box">
+          <div class="client-icon bg-blue-light">📱</div>
+          <div>
+            <div class="client-text">요양보호사 앱</div>
+            <div class="client-sub">React Native (iOS/Android)</div>
+            <div class="client-sub">음성 녹음 · AI 초안 확인 · 제출</div>
+          </div>
+        </div>
+        <div class="client-box">
+          <div class="client-icon bg-green-light">📱</div>
+          <div>
+            <div class="client-text">원장님 앱</div>
+            <div class="client-sub">React Native (iOS/Android)</div>
+            <div class="client-sub">현황 확인 · 웹 로그인 승인</div>
+          </div>
+        </div>
+        <div class="client-box">
+          <div class="client-icon bg-purple-light">💻</div>
+          <div>
+            <div class="client-text">웹 백오피스</div>
+            <div class="client-sub">React 19 + TypeScript</div>
+            <div class="client-sub">기록 검토·확정 · 관리 · 내보내기</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector">
+      <svg viewBox="0 0 20 24"><path d="M10 2 L10 18 M5 14 L10 18 L15 14" fill="none" stroke="#c0c5d0" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </div>
+    <div class="connector-label">HTTPS + WebSocket + FCM Push</div>
+
+    <!-- Gateway -->
+    <div class="layer gateway-layer">
+      <div class="layer-label">API Gateway</div>
+      <div class="gateway-box">
+        <div class="icon">🔀</div>
+        <div>
+          <div class="text">Spring Cloud Gateway</div>
+          <div class="desc">라우팅 · JWT 검증 · Rate Limiting · CORS · RBAC</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector">
+      <svg viewBox="0 0 20 24"><path d="M10 2 L10 18 M5 14 L10 18 L15 14" fill="none" stroke="#c0c5d0" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </div>
+
+    <!-- Microservices -->
+    <div class="layer services-layer">
+      <div class="layer-label">Microservices (Kotlin + Spring Boot)</div>
+      <div class="services">
+        <div class="service-card auth">
+          <div class="service-name">Auth Service</div>
+          <div class="service-tech">인증 · 인가</div>
+          <ul class="service-features">
+            <li>SMS OTP 인증</li>
+            <li>생체/PIN 인증</li>
+            <li>앱 푸시 웹 로그인 승인</li>
+            <li>JWT 발급·갱신</li>
+            <li>기기 신뢰 관리</li>
+            <li>역할 기반 접근 제어</li>
+          </ul>
+        </div>
+        <div class="service-card care">
+          <div class="service-name">Care Service</div>
+          <div class="service-tech">돌봄 기록 · 관리</div>
+          <ul class="service-features">
+            <li>센터·수급자·보호자 관리</li>
+            <li>요양보호사 관리·배정</li>
+            <li>돌봄 기록 저장·확정</li>
+            <li>PDF/엑셀 내보내기</li>
+          </ul>
+        </div>
+        <div class="service-card ai">
+          <div class="service-name">AI Pipeline</div>
+          <div class="service-tech">음성 → 텍스트 → 기록</div>
+          <ul class="service-features">
+            <li>Whisper STT 변환</li>
+            <li>GPT-4o-mini 초안 생성</li>
+            <li>알림톡 메시지 생성</li>
+            <li>Coroutine 비동기 처리</li>
+          </ul>
+        </div>
+        <div class="service-card noti">
+          <div class="service-name">Notification</div>
+          <div class="service-tech">알림 발송</div>
+          <ul class="service-features">
+            <li>카카오 알림톡 (Solapi)</li>
+            <li>FCM 푸시 알림</li>
+            <li>발송 로그·추적</li>
+            <li>SQS 비동기 수신</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector">
+      <svg viewBox="0 0 20 24"><path d="M10 2 L10 18 M5 14 L10 18 L15 14" fill="none" stroke="#c0c5d0" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </div>
+
+    <!-- Data Layer -->
+    <div class="layer data-layer">
+      <div class="layer-label">Data Layer (AWS)</div>
+      <div class="data-boxes">
+        <div class="data-box">
+          <div class="data-icon">🐘</div>
+          <div>
+            <div class="data-text">PostgreSQL 17</div>
+            <div class="data-sub">AWS RDS · Multi-AZ · UUID v7 PK</div>
+            <div class="tech-badge">서비스별 독립 DB</div>
+          </div>
+        </div>
+        <div class="data-box">
+          <div class="data-icon" style="background:#e8f0fe;">☁️</div>
+          <div>
+            <div class="data-text">AWS S3</div>
+            <div class="data-sub">음성 파일 · PDF 저장 · SSE 암호화</div>
+          </div>
+        </div>
+        <div class="data-box">
+          <div class="data-icon" style="background:#fde8e8;">📨</div>
+          <div>
+            <div class="data-text">AWS SQS</div>
+            <div class="data-sub">AI → Notification 비동기 메시징</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="connector">
+      <svg viewBox="0 0 20 24"><path d="M10 2 L10 18 M5 14 L10 18 L15 14" fill="none" stroke="#c0c5d0" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </div>
+
+    <!-- External APIs -->
+    <div class="layer ext-layer">
+      <div class="layer-label">External APIs</div>
+      <div class="ext-apis">
+        <div class="ext-api">
+          <div class="ext-api-icon bg-green-light">🎙️</div>
+          <div>
+            <div class="ext-api-name">OpenAI Whisper</div>
+            <div class="ext-api-desc">음성 → 텍스트 (STT)</div>
+          </div>
+        </div>
+        <div class="ext-api">
+          <div class="ext-api-icon bg-orange-light">🤖</div>
+          <div>
+            <div class="ext-api-name">OpenAI GPT-4o-mini</div>
+            <div class="ext-api-desc">기록지 초안 + 알림톡 메시지</div>
+          </div>
+        </div>
+        <div class="ext-api">
+          <div class="ext-api-icon bg-yellow-light">💬</div>
+          <div>
+            <div class="ext-api-name">Solapi 알림톡</div>
+            <div class="ext-api-desc">카카오 알림톡 발송</div>
+          </div>
+        </div>
+        <div class="ext-api">
+          <div class="ext-api-icon bg-red-light">🔔</div>
+          <div>
+            <div class="ext-api-name">Firebase FCM</div>
+            <div class="ext-api-desc">앱 푸시 알림</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
