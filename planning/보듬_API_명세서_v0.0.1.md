@@ -2,7 +2,7 @@
 
 > **문서 버전**: 0.0.1
 > **작성일**: 2026-03-18
-> **기반 문서**: 보듬_PRD_v0.0.1.md, 보듬_엔티티_명세서_v0.0.1.md
+> **기반 문서**: 보듬_PRD_v0.1.0.md, 보듬_엔티티_명세서_v0.0.1.md
 > **대상 범위**: 전체 시스템 (1단계 핵심 ~ 3단계 확장)
 > **Base URL**: `https://api.bodeum.kr/api/v1`
 > **인증**: Bearer JWT (Authorization 헤더)
@@ -658,21 +658,21 @@ AI 처리 상태 폴링.
     "visitDate": "2026-03-18",
     "audioFileUrl": "https://s3.../audio.m4a",
     "audioDurationSeconds": 90,
-    "sttText": "오늘 박할머니 컨디션 좋으셨어요...",
-    "recordDraft": {
-      "physical": "식사를 잘 하셨으며...",
-      "cognitive": "특이사항 없음",
-      "emotional": "기분이 좋으셨으며...",
+    "transcribedText": "오늘 박할머니 컨디션 좋으셨어요...",
+    "aiGeneratedDraft": {
+      "physicalCareNote": "식사를 잘 하셨으며...",
+      "cognitiveCareNote": "특이사항 없음",
+      "emotionalCareNote": "기분이 좋으셨으며...",
       "specialNotes": "혈압 130/85mmHg"
     },
-    "recordFinal": null,
+    "confirmedRecord": null,
     "alimtalkMessage": "오늘 어머님께서는 식사를 잘 하셨고...",
     "alimtalkStatus": "PENDING",
     "status": "DRAFT",
     "revisionCount": 0,
     "submittedAt": null,
     "confirmedAt": null,
-    "confirmedBy": null,
+    "confirmerId": null,
     "createdAt": "2026-03-18T05:30:00Z"
   }
 }
@@ -689,10 +689,10 @@ AI 초안 텍스트 직접 수정 (보정 방식 3: 텍스트 편집).
 **Request Body**:
 ```json
 {
-  "recordDraft": {
-    "physical": "수정된 신체 상태 기록",
-    "cognitive": "수정된 인지 상태 기록",
-    "emotional": "수정된 정서 상태 기록",
+  "aiGeneratedDraft": {
+    "physicalCareNote": "수정된 신체 상태 기록",
+    "cognitiveCareNote": "수정된 인지 상태 기록",
+    "emotionalCareNote": "수정된 정서 상태 기록",
     "specialNotes": "수정된 특이사항"
   },
   "alimtalkMessage": "수정된 알림톡 메시지"
@@ -813,7 +813,7 @@ AI 초안 텍스트 직접 수정 (보정 방식 3: 텍스트 편집).
 
 **접근**: DIRECTOR, SOCIAL_WORKER (센터 내 기록, status=SUBMITTED)
 
-**Request Body**: `recordDraft` + `alimtalkMessage` (PUT /records/{id}/draft 와 동일)
+**Request Body**: `aiGeneratedDraft` + `alimtalkMessage` (PUT /records/{id}/draft 와 동일)
 
 ---
 
@@ -826,10 +826,10 @@ AI 초안 텍스트 직접 수정 (보정 방식 3: 텍스트 편집).
 **Request Body** (optional):
 ```json
 {
-  "recordFinal": {
-    "physical": "최종 확정 내용 (수정 시)",
-    "cognitive": "...",
-    "emotional": "...",
+  "confirmedRecord": {
+    "physicalCareNote": "최종 확정 내용 (수정 시)",
+    "cognitiveCareNote": "...",
+    "emotionalCareNote": "...",
     "specialNotes": "..."
   }
 }
@@ -843,7 +843,7 @@ AI 초안 텍스트 직접 수정 (보정 방식 3: 텍스트 편집).
     "recordId": "uuid",
     "status": "CONFIRMED",
     "confirmedAt": "2026-03-18T07:00:00Z",
-    "confirmedBy": "uuid"
+    "confirmerId": "uuid"
   }
 }
 ```
@@ -898,7 +898,7 @@ AI 초안 텍스트 직접 수정 (보정 방식 3: 텍스트 편집).
     {
       "name": "박영수",
       "phone": "01098765432",
-      "relation": "아들",
+      "relationshipToClient": "아들",
       "isPrimary": true
     }
   ]
@@ -1205,11 +1205,11 @@ AI Pipeline → Care Service (SQS 콜백).
   "eventType": "RECORD_PROCESSED",
   "recordId": "uuid",
   "success": true,
-  "sttText": "오늘 박할머니 컨디션 좋으셨어요...",
-  "recordDraft": {
-    "physical": "...",
-    "cognitive": "...",
-    "emotional": "...",
+  "transcribedText": "오늘 박할머니 컨디션 좋으셨어요...",
+  "aiGeneratedDraft": {
+    "physicalCareNote": "...",
+    "cognitiveCareNote": "...",
+    "emotionalCareNote": "...",
     "specialNotes": "..."
   },
   "alimtalkMessage": "오늘 어머님께서는...",
@@ -1438,17 +1438,93 @@ Auth Service / Care Service → Notification Service (SQS).
 
 ---
 
-## 8. 3단계 API (확장)
+### 7.7 상담일지 AI 자동 생성 (F-AI-007) 🆕
 
-### 8.1 공단/ERP 연동 (F-ERP-001)
+> 돌봄 기록(상태변화기록지) 데이터를 기반으로 상담일지 초안을 AI가 자동 생성.
 
 | Method | Path | 설명 |
 |:---|:---|:---|
-| `GET` | `/integrations/erp` | 연동 설정 조회 |
-| `POST` | `/integrations/erp` | 연동 설정 생성 |
-| `PUT` | `/integrations/erp/{id}` | 연동 설정 수정 |
-| `POST` | `/integrations/erp/{id}/sync` | 수동 동기화 트리거 |
-| `GET` | `/integrations/erp/{id}/logs` | 동기화 로그 조회 |
+| `POST` | `/counsel-journals/generate` | AI 상담일지 초안 생성 (수급자 ID + 기간 지정) |
+| `GET` | `/counsel-journals` | 상담일지 목록 조회 (센터별, 기간별 필터) |
+| `GET` | `/counsel-journals/{id}` | 상담일지 상세 조회 |
+| `PUT` | `/counsel-journals/{id}` | 상담일지 수정 (AI 초안 보정) |
+| `POST` | `/counsel-journals/{id}/confirm` | 상담일지 확정 |
+| `GET` | `/counsel-journals/{id}/export` | 상담일지 PDF/엑셀 내보내기 |
+
+---
+
+### 7.8 일정 캘린더 (F-SCH-001) 🆕
+
+> 수급자·요양보호사 일정을 캘린더 형태로 관리.
+
+| Method | Path | 설명 |
+|:---|:---|:---|
+| `GET` | `/schedules` | 일정 목록 조회 (날짜 범위, 수급자/요양보호사 필터) |
+| `POST` | `/schedules` | 일정 등록 |
+| `PUT` | `/schedules/{id}` | 일정 수정 |
+| `DELETE` | `/schedules/{id}` | 일정 삭제 |
+| `GET` | `/schedules/calendar` | 캘린더 뷰 데이터 (월별/주별) |
+
+---
+
+### 7.9 기초평가 관리 (F-EVAL-001) 🆕
+
+> 수급자 기초평가 일정 관리 + AI 평가 초안 생성.
+
+| Method | Path | 설명 |
+|:---|:---|:---|
+| `GET` | `/evaluations` | 기초평가 목록 조회 |
+| `POST` | `/evaluations` | 기초평가 등록 |
+| `PUT` | `/evaluations/{id}` | 기초평가 수정 |
+| `POST` | `/evaluations/{id}/generate-draft` | AI 평가 초안 생성 (누적 돌봄 기록 기반) |
+| `GET` | `/evaluations/{id}/export` | 기초평가 PDF 내보내기 |
+
+---
+
+### 7.10 사례회의록·직원회의록 AI 작성 (F-MEET-001) 🆕
+
+> 회의 녹음 → AI 자동 회의록 생성.
+
+| Method | Path | 설명 |
+|:---|:---|:---|
+| `POST` | `/meetings` | 회의 녹음 업로드 + AI 회의록 생성 요청 |
+| `GET` | `/meetings` | 회의록 목록 조회 (유형 필터: 사례회의/직원회의) |
+| `GET` | `/meetings/{id}` | 회의록 상세 조회 |
+| `PUT` | `/meetings/{id}` | 회의록 수정 |
+| `POST` | `/meetings/{id}/confirm` | 회의록 확정 |
+| `GET` | `/meetings/{id}/export` | 회의록 PDF/엑셀 내보내기 |
+
+---
+
+### 7.11 근무일지·출근부 연계 (F-ATT-001) 🆕
+
+> 요양보호사 근무일지·출근부를 돌봄 기록과 연계 관리.
+
+| Method | Path | 설명 |
+|:---|:---|:---|
+| `GET` | `/attendance` | 근무일지/출근부 조회 (기간별, 요양보호사별) |
+| `POST` | `/attendance` | 출퇴근 기록 등록 |
+| `PUT` | `/attendance/{id}` | 근무기록 수정 |
+| `GET` | `/attendance/summary` | 월별 근무 요약 (요양보호사별 총 근무시간) |
+| `GET` | `/attendance/export` | 출근부 엑셀 내보내기 |
+
+---
+
+## 8. 3단계 API (확장)
+
+### 8.1 공단 엑셀 연동 및 ERP 호환 (F-ERP-001) 🆕 수정
+
+> 공단은 운영 데이터(일정계획, 청구내역, 급여제공기록) API를 제공하지 않으므로, 엑셀 파일 기반 양방향 연동.
+
+| Method | Path | 설명 |
+|:---|:---|:---|
+| `POST` | `/integrations/nhis/import` | 공단 엑셀 파일 업로드 (일정계획, 청구내역, RFID 실적) |
+| `POST` | `/integrations/nhis/export` | 보듬 데이터를 공단 엑셀 양식으로 변환·다운로드 |
+| `GET` | `/integrations/nhis/templates` | 공단 엑셀 양식 템플릿 목록 조회 |
+| `GET` | `/integrations/nhis/logs` | 엑셀 임포트/익스포트 이력 조회 |
+| `POST` | `/integrations/erp/import` | 외부 ERP 엑셀 파일 임포트 (패밀리케어, 롱텀케어, 케어포 양식 호환) |
+| `POST` | `/integrations/erp/export` | 외부 ERP 호환 엑셀 내보내기 |
+| `GET` | `/integrations/erp/supported-formats` | 지원하는 ERP 엑셀 양식 목록 |
 
 ---
 
@@ -1467,6 +1543,41 @@ Auth Service / Care Service → Notification Service (SQS).
 |:---|:---|:---|
 | `GET` | `/facility-types` | 지원 서비스 유형 목록 |
 | `PUT` | `/center/facility-type` | 센터 서비스 유형 설정 |
+
+---
+
+### 8.4 본인부담금 관리 (F-ERP-002) 🆕
+
+| Method | Path | 설명 |
+|:---|:---|:---|
+| `GET` | `/billing/self-payment` | 본인부담금 청구 목록 조회 |
+| `POST` | `/billing/self-payment` | 본인부담금 청구 일괄 생성 |
+| `PUT` | `/billing/self-payment/{id}` | 청구 수정 |
+| `POST` | `/billing/self-payment/{id}/receipt` | 영수증 알림톡 발송 |
+| `GET` | `/billing/self-payment/summary` | 미수금 현황 요약 |
+| `GET` | `/billing/self-payment/{id}/export` | 납부확인서 PDF 내보내기 |
+
+---
+
+### 8.5 직원 급여 관리 (F-ERP-003) 🆕
+
+| Method | Path | 설명 |
+|:---|:---|:---|
+| `GET` | `/payroll` | 급여대장 조회 (월별) |
+| `POST` | `/payroll/calculate` | 월별 급여 일괄 계산 (근무시간 기반) |
+| `GET` | `/payroll/{id}` | 개인별 급여 상세 |
+| `POST` | `/payroll/{id}/send-slip` | 급여명세서 알림톡 발송 |
+| `GET` | `/payroll/export` | 급여대장 엑셀 내보내기 |
+
+---
+
+### 8.6 AI 업무 가이드 (F-ERP-004) 🆕
+
+| Method | Path | 설명 |
+|:---|:---|:---|
+| `GET` | `/work-guide/today` | 오늘의 할 일 AI 자동 추천 (사용자 역할별) |
+| `GET` | `/work-guide/checklist` | 일일/주간/월간 업무 체크리스트 |
+| `PUT` | `/work-guide/checklist/{id}` | 체크리스트 항목 완료 처리 |
 
 ---
 
@@ -1492,7 +1603,7 @@ Auth Service / Care Service → Notification Service (SQS).
 
 ## 부록 C: 참고 문서
 
-- 보듬_PRD_v0.0.1.md
+- 보듬_PRD_v0.1.0.md
 - 보듬_엔티티_명세서_v0.0.1.md
 - 보듬_도메인_용어사전_v0.0.1.md
 - 보듬_설계보강_v0.0.1.md
